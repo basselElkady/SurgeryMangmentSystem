@@ -19,8 +19,8 @@ public class Patient extends User {
     private List<Appointment> appointments;
 
 
-    public Patient( String firstName, String lastName, String email, String phoneNumber,Role role, Address address) {
-        super(firstName, lastName, email, phoneNumber,role);
+    public Patient(Long id, String firstName, String lastName, String email, String phoneNumber,Role role, Address address) {
+        super(id, firstName, lastName, email, phoneNumber,role);
         this.address = address;
     }
 

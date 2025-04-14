@@ -1,5 +1,6 @@
 package edu.miu.cs.cs489.lesson6.citylibraryapp.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,6 +20,9 @@ public class Address {
     private String state;
     @Column(length = 16)
     private String zipCode;
+    @OneToOne(mappedBy = "address")
+    @JsonIgnore
+    private Patient patient;
 
 
     @Override

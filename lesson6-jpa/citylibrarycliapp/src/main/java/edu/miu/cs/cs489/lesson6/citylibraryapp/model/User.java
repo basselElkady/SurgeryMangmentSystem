@@ -19,4 +19,13 @@ public class User {
     private String email;
     private String phoneNumber;
     private Role role;
+
+
+    public User(String firstName, String lastName, String email, String phoneNumber, Role role) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.role = role;
+    }
 }
