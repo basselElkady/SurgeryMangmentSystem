@@ -1,0 +1,337 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions;
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.ErrorResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AdminExceptions.AdminNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AdminExceptions.AdminWithEmailAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AdminExceptions.AdminWithIdAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AdminExceptions.AdminWithPhoneNumberAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AppointmentsExceptions.AppointmentIsAlreadyDoneException;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AppointmentsExceptions.AppointmentNotFoundId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.DentistExceptions.*;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.PatientExceptions.*;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryNotFoundWithName;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryWithNameAlreadyExist;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@ControllerAdvice
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    protected ResponseEntity<Object> handleRuntimeException(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatus status,
+            WebRequest request
+    ) {
+        Map<String, String> errors = new HashMap<>();
+        List<ObjectError> allErrors = ex.getBindingResult().getAllErrors();
+        allErrors.forEach(
+                (error) ->{
+                    String fieldName = ((FieldError) error).getField();
+                    String errorMessage = error.getDefaultMessage();
+                    errors.put(fieldName, errorMessage);
+                }
+        );
+        logger.error("Handle Method Argument Not Valid Exception"+ errors.toString());
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDto> handleGlobalException(
+            Exception exception, WebRequest webRequest
+    ) {
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+
+    }
+
+    @ExceptionHandler(AdminNotFoundWithId.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            AdminNotFoundWithId exception, WebRequest webRequest
+    ){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AdminWithEmailAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            AdminWithEmailAlreadyExist exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AdminWithPhoneNumberAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            AdminWithPhoneNumberAlreadyExist exception, WebRequest webRequest
+    ){
+         ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                 webRequest.getDescription(false),
+                 HttpStatus.CONFLICT,
+                 exception.getMessage(),
+                 LocalDateTime.now()
+         );
+         logger.error("in the global error"+ exception.getMessage());
+         return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AdminWithIdAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            AdminWithIdAlreadyExist exception, WebRequest webRequest){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AppointmentIsAlreadyDoneException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+        AppointmentIsAlreadyDoneException exception, WebRequest webRequest
+    ){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(AppointmentNotFoundId.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+        AppointmentNotFoundId exception, WebRequest webRequest
+    ){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DentistIsFullException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+        DentistIsFullException exception, WebRequest webRequest
+    ){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DentistNotFoundWithId.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            DentistNotFoundWithId exception, WebRequest webRequest
+    ){
+        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                webRequest.getDescription(false),
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                LocalDateTime.now()
+        );
+        logger.error("in the global error"+ exception.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DentistWithEmailAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            DentistWithEmailAlreadyExist exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+
+    @ExceptionHandler(DentistWithPhoneNumberAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            DentistWithPhoneNumberAlreadyExist exception, WebRequest webRequest
+    ){
+         ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                 webRequest.getDescription(false),
+                 HttpStatus.CONFLICT,
+                 exception.getMessage(),
+                 LocalDateTime.now()
+         );
+         logger.error("in the global error"+ exception.getMessage());
+         return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(DentistWithIdAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            DentistWithIdAlreadyExist exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+
+    @ExceptionHandler(PaitentDidnotPaidTheLastBillException.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            PaitentDidnotPaidTheLastBillException exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+
+    @ExceptionHandler(PaitentNotFoundWithId.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            PaitentNotFoundWithId exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.NOT_FOUND,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+            }
+
+    @ExceptionHandler(PatientWithEmailAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            PatientWithEmailAlreadyExist exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+    @ExceptionHandler(PatientWithPhoneNumberAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            PatientWithPhoneNumberAlreadyExist exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+
+            @ExceptionHandler(PatientWithIdAlreadyExist.class)
+            public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+                    PatientWithIdAlreadyExist exception, WebRequest webRequest){
+                        ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                                webRequest.getDescription(false),
+                                HttpStatus.CONFLICT,
+                                exception.getMessage(),
+                                LocalDateTime.now()
+                        );
+                        logger.error("in the global error"+ exception.getMessage());
+                        return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+
+    @ExceptionHandler(SurgeryNotFoundWithId.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            SurgeryNotFoundWithId exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.NOT_FOUND,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+            }
+
+    @ExceptionHandler(SurgeryNotFoundWithName.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            SurgeryNotFoundWithName exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.NOT_FOUND,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.NOT_FOUND);
+            }
+
+    @ExceptionHandler(SurgeryWithNameAlreadyExist.class)
+    public ResponseEntity<ErrorResponseDto> handleResourceNotFoundException(
+            SurgeryWithNameAlreadyExist exception, WebRequest webRequest){
+                ErrorResponseDto errorResponseDto = new ErrorResponseDto(
+                        webRequest.getDescription(false),
+                        HttpStatus.CONFLICT,
+                        exception.getMessage(),
+                        LocalDateTime.now()
+                );
+                logger.error("in the global error"+ exception.getMessage());
+                return new ResponseEntity<>(errorResponseDto, HttpStatus.CONFLICT);
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+}

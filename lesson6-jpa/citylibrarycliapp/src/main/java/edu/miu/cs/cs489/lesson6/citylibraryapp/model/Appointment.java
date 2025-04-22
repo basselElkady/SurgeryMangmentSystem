@@ -16,7 +16,7 @@ public class Appointment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
     private LocalDate date;
     private LocalTime time;
     private String description;
@@ -30,5 +30,9 @@ public class Appointment {
     @JoinColumn(name = "surgery_id")
     private Surgery surgery;
 
+    @OneToOne(cascade = CascadeType.PERSIST)
+    private Bill bill;
+
+    private AppointmentState state;
 
 }

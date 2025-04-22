@@ -3,6 +3,7 @@ package edu.miu.cs.cs489.lesson6.citylibraryapp.Controller;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.PatientRequestDTO;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseDto;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseList;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.PatientExceptions.PaitentNotFoundWithId;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.PatientService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class PatientController {
             try {
                 PatientResponseDto patient = patientService.getPatient(id);
                 return ResponseEntity.ok(patient);
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | PaitentNotFoundWithId e) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
             }
         }
@@ -48,14 +49,9 @@ public class PatientController {
 
         // Update patient
         @PutMapping(consumes = "application/json", produces = "application/json")
-        public ResponseEntity<String> updatePatient(@RequestBody PatientResponseDto patientResponseDto) {
-            try {
-                patientService.updatePatient(patientResponseDto);
-                return ResponseEntity.ok("Patient updated successfully");
-            } catch (RuntimeException e) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(e.getMessage());
-            }
+        public ResponseEntity<String> updatePatient(@RequestBody PatientResponseDto patientResponseDto) throws PaitentNotFoundWithId {
+            patientService.updatePatient(patientResponseDto);
+            return ResponseEntity.ok("Patient updated successfully");
         }
 
         // Delete patient
@@ -64,7 +60,7 @@ public class PatientController {
             try {
                 patientService.deletePatient(id);
                 return ResponseEntity.ok("Patient deleted successfully");
-            } catch (RuntimeException e) {
+            } catch (RuntimeException | PaitentNotFoundWithId e) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body("Patient not found with id: " + id);
             }

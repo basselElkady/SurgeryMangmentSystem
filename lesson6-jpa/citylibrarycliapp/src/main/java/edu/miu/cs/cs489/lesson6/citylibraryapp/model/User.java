@@ -18,7 +18,15 @@ public class User {
     private String lastName;
     private String email;
     private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
     private Role role;
+
+    @Column(unique = true, nullable = false)
+    private String username;
+
+    @Column(nullable = false)
+    private String password;
 
 
     public User(String firstName, String lastName, String email, String phoneNumber, Role role) {
@@ -28,4 +36,5 @@ public class User {
         this.phoneNumber = phoneNumber;
         this.role = role;
     }
+
 }

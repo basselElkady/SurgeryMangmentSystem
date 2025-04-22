@@ -3,6 +3,10 @@ package edu.miu.cs.cs489.lesson6.citylibraryapp.Server;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.PatientRequestDTO;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseDto;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseList;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.PatientExceptions.PaitentNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Appointment;
+
+import java.util.Deque;
 
 public interface PatientService {
 
@@ -10,11 +14,12 @@ public interface PatientService {
 
     void addPatient(PatientRequestDTO patientRequestDTO);
 
-    void deletePatient(Long id);
-    PatientResponseDto getPatient(Long id);
+    void deletePatient(Long id) throws PaitentNotFoundWithId;
+    PatientResponseDto getPatient(Long id) throws PaitentNotFoundWithId;
 
-    void updatePatient(PatientResponseDto patientResponseDto);
+    void updatePatient(PatientResponseDto patientResponseDto) throws PaitentNotFoundWithId;
 
+    boolean validToAddAppointment(Appointment appointment);
 
 
 

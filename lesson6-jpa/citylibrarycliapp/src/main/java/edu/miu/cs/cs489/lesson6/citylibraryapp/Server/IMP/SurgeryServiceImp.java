@@ -1,0 +1,79 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp.Server.IMP;
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.SurgeryRequestDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.SurgeryListResponse;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.SurgeryResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryNotFoundWithName;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryWithNameAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Mapper.SurgeryMapper;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.SurgeryService;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Surgery;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.SurgeryRepository;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+@NoArgsConstructor
+public class SurgeryServiceImp implements SurgeryService {
+
+    private SurgeryRepository surgeryRepository;
+    private SurgeryMapper surgeryMapper;
+
+    @Autowired
+    public SurgeryServiceImp(SurgeryRepository surgeryRepository, SurgeryMapper surgeryMapper) {
+        this.surgeryRepository = surgeryRepository;
+        this.surgeryMapper = surgeryMapper;
+    }
+    @Override
+    public void addSurgery(SurgeryRequestDto surgeryRequestDto) throws SurgeryWithNameAlreadyExist {
+        if(surgeryRepository.existsByName(surgeryRequestDto.name())) throw new SurgeryWithNameAlreadyExist("Surgery with name " + surgeryRequestDto.name() + " already exists");
+        Surgery surgery = surgeryMapper.mapToSurgery(surgeryRequestDto);
+        surgeryRepository.save(surgery);
+    }
+
+    @Override
+    public void updateSurgery(SurgeryResponseDto surgeryResponseDto) throws SurgeryNotFoundWithId, SurgeryWithNameAlreadyExist {
+        // add id
+        Surgery surgery = surgeryRepository.findById(surgeryResponseDto.id()).orElseThrow(() -> new SurgeryNotFoundWithId("Surgery not found with id " + surgeryResponseDto.id()));
+
+
+        if(surgeryResponseDto.name() != null){
+            if(surgeryRepository.findByName(surgeryResponseDto.name()) != null)
+                throw new SurgeryWithNameAlreadyExist("Surgery with name " + surgeryResponseDto.name() + " already exists");
+            surgery.setName(surgeryResponseDto.name());
+        }
+        if(surgeryResponseDto.street() != null) surgery.getAddress().setStreet(surgeryResponseDto.street());
+        if(surgeryResponseDto.city() != null) surgery.getAddress().setCity(surgeryResponseDto.city());
+        if(surgeryResponseDto.state() != null) surgery.getAddress().setState(surgeryResponseDto.state());
+        if(surgeryResponseDto.zipCode() != null) surgery.getAddress().setZipCode(surgeryResponseDto.zipCode());
+
+    }
+
+    @Override
+    public void deleteSurgery(String name) throws SurgeryNotFoundWithName {
+
+        Surgery surgery = surgeryRepository.findByName(name);
+        if(surgery == null) throw new SurgeryNotFoundWithName("Surgery not found with name " + name);
+        surgeryRepository.delete(surgery);
+
+    }
+
+    @Override
+    public SurgeryResponseDto getSurgery(String name) throws SurgeryNotFoundWithName {
+        Surgery surgery = surgeryRepository.findByName(name);
+        if(surgery == null) throw new SurgeryNotFoundWithName("Surgery not found with name " + name);
+        return surgeryMapper.mapToSurgeryResponseDto(surgery);
+    }
+
+    @Override
+    public SurgeryListResponse getAllSurgeries() {
+        if(surgeryRepository.findAll().isEmpty()) return null;
+        return new SurgeryListResponse(surgeryRepository.findAll().
+                stream().
+                map(surgeryMapper::mapToSurgeryResponseDto).
+                toList());
+    }
+}

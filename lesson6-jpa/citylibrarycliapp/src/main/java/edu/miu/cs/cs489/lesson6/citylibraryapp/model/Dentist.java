@@ -18,4 +18,9 @@ public class Dentist extends User {
     private List<Appointment> appointments;
 
 
+    public Dentist(String firstName, String lastName, String email, String phoneNumber, Role role) {
+
+        super(firstName, lastName, email, phoneNumber,role);
+
+    }
 }

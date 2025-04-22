@@ -1,0 +1,12 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.DentistExceptions;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.FORBIDDEN)
+public class DentistIsFullException extends Exception{
+
+    public DentistIsFullException(String message) {
+        super(message);
+    }
+}

@@ -7,10 +7,12 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Patient;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 
 @AllArgsConstructor
-@Configuration
+//@Configuration
+@Component
 public class PatentMapper {
 
 
