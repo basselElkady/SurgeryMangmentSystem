@@ -27,12 +27,16 @@ public class Patient extends User {
     private Appointment lastAppointment;
 
 
-    public Patient( String firstName, String lastName, String email, String phoneNumber,Role role, Address address) {
-        super(firstName, lastName, email, phoneNumber,role);
+//    public Patient( String firstName, String lastName, String email, String phoneNumber,Role role, Address address) {
+//        super(firstName, lastName, email, phoneNumber,role);
+//        this.address = address;
+//    }
+
+
+    public Patient(String username, String password, String firstName, String lastName, String email, String phoneNumber, Role role, Address address) {
+
+        super(username, password, firstName, lastName, email, phoneNumber, role);
         this.address = address;
+
     }
-
-
-
-
 }

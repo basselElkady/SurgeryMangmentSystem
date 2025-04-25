@@ -19,8 +19,7 @@ public class AdminServiceImp implements AdminService {
     private AdminRepository adminRepository;
     private UserMapper userMapper;
     @Override
-    public void addAdmin(UserRequestDto adminRequestDto) throws AdminWithEmailAlreadyExist, AdminWithPhoneNumberAlreadyExist {
-
+    public void addAdmin(UserRequestDto adminRequestDto) {
         if(adminRepository.existsByPhoneNumber(adminRequestDto.email()))
             throw new AdminWithEmailAlreadyExist("Admin with email " + adminRequestDto.email() + " already exists");
         if(adminRepository.existsByPhoneNumber(adminRequestDto.phoneNumber()))
@@ -44,7 +43,9 @@ public class AdminServiceImp implements AdminService {
     @Override
     public void updateAdmin(UserResponseDto adminResponseDto) {
 
-        Admin dentist = adminRepository.findById(adminResponseDto.id()).orElseThrow(() -> new RuntimeException("Dentist not found with id " + adminResponseDto.id()));
+        Admin dentist = adminRepository.findByUsername(adminResponseDto.userName());
+        if(dentist == null)
+            throw new RuntimeException("Admin not found with username " + adminResponseDto.userName());
         if (adminResponseDto.firstName() != null)
             dentist.setFirstName(adminResponseDto.firstName());
         if (adminResponseDto.lastName() != null)

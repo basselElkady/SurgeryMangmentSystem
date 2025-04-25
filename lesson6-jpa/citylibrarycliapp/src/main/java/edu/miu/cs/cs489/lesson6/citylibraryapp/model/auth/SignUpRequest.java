@@ -16,7 +16,14 @@ public class SignUpRequest {
     private String password;
 
     // Add role field if needed
-    private String role; // "PATIENT", "DENTIST", etc.
+    private String role;
+
+    private String firstName;
+    private String lastName;
+    private String email;
+    private String phoneNumber;
+
+
 
     // Constructors, getters, setters
 }

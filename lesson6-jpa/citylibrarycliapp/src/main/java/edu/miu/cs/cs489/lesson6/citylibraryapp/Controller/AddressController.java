@@ -17,14 +17,14 @@ public class AddressController {
 
 
         // Get all addresses with patient data sorted by city
-        @GetMapping(produces = "application/json")
-        public ResponseEntity<AddressListResponse> getAllAddresses() {
-            AddressListResponse response = addressService.getAddressList();
-            if (response == null) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok(response);
-        }
+//        @GetMapping(produces = "application/json")
+//        public ResponseEntity<AddressListResponse> getAllAddresses() {
+//            AddressListResponse response = addressService.getAddressList();
+//            if (response == null) {
+//                return ResponseEntity.noContent().build();
+//            }
+//            return ResponseEntity.ok(response);
+//        }
 
 
 }

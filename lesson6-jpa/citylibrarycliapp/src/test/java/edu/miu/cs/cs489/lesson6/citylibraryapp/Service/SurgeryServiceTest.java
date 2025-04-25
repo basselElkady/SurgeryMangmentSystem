@@ -1,0 +1,130 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp.Service;
+
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.SurgeryRequestDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.SurgeryResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryNotFoundWithName;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.SurgeryWithNameAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Mapper.SurgeryMapper;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.IMP.SurgeryServiceImp;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Address;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Surgery;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.SurgeryRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.*;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class SurgeryServiceTest {
+
+    @InjectMocks
+    private SurgeryServiceImp surgeryService;
+
+    @Mock
+    private SurgeryRepository surgeryRepository;
+
+    @Mock
+    private SurgeryMapper surgeryMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testAddSurgery_Success() {
+        SurgeryRequestDto requestDto = new SurgeryRequestDto("City Clinic", "Main", "City", "State", "12345");
+        Surgery surgery = new Surgery();
+
+        when(surgeryRepository.existsByName(requestDto.name())).thenReturn(false);
+        when(surgeryMapper.mapToSurgery(requestDto)).thenReturn(surgery);
+
+        assertDoesNotThrow(() -> surgeryService.addSurgery(requestDto));
+        verify(surgeryRepository).save(surgery);
+    }
+
+    @Test
+    void testAddSurgery_NameExists_ThrowsException() {
+        SurgeryRequestDto requestDto = new SurgeryRequestDto("City Clinic", "Main", "City", "State", "12345");
+
+        when(surgeryRepository.existsByName(requestDto.name())).thenReturn(true);
+
+        assertThrows(SurgeryWithNameAlreadyExist.class, () -> surgeryService.addSurgery(requestDto));
+    }
+
+    @Test
+    void testUpdateSurgery_Success() {
+        SurgeryResponseDto responseDto = new SurgeryResponseDto(1L, "New Name", "Main", "City", "State", "12345");
+        Address address = new Address("Old", "OldCity", "OldState", "00000");
+        Surgery surgery = new Surgery(1L, "Old Name", address);
+
+        when(surgeryRepository.findById(1L)).thenReturn(Optional.of(surgery));
+        when(surgeryRepository.findByName("New Name")).thenReturn(null);
+
+        assertDoesNotThrow(() -> surgeryService.updateSurgery(responseDto));
+        assertEquals("New Name", surgery.getName());
+    }
+
+    @Test
+    void testUpdateSurgery_NameConflict_ThrowsException() {
+        SurgeryResponseDto responseDto = new SurgeryResponseDto(1L, "Existing Name", "Main", "City", "State", "12345");
+        Surgery surgery = new Surgery(1L, "Old Name", new Address());
+
+        when(surgeryRepository.findById(1L)).thenReturn(Optional.of(surgery));
+        when(surgeryRepository.findByName("Existing Name")).thenReturn(new Surgery());
+
+        assertThrows(SurgeryWithNameAlreadyExist.class, () -> surgeryService.updateSurgery(responseDto));
+    }
+
+    @Test
+    void testDeleteSurgery_Success() {
+        Surgery surgery = new Surgery(1L, "TestSurgery", new Address());
+
+        when(surgeryRepository.findByName("TestSurgery")).thenReturn(surgery);
+
+        assertDoesNotThrow(() -> surgeryService.deleteSurgery("TestSurgery"));
+        verify(surgeryRepository).delete(surgery);
+    }
+
+    @Test
+    void testDeleteSurgery_NotFound_ThrowsException() {
+        when(surgeryRepository.findByName("MissingSurgery")).thenReturn(null);
+
+        assertThrows(SurgeryNotFoundWithName.class, () -> surgeryService.deleteSurgery("MissingSurgery"));
+    }
+
+    @Test
+    void testGetSurgery_Success() {
+        Surgery surgery = new Surgery(1L, "Surg1", new Address());
+        SurgeryResponseDto dto = new SurgeryResponseDto(1L, "Surg1", "Main", "City", "State", "12345");
+
+        when(surgeryRepository.findByName("Surg1")).thenReturn(surgery);
+        when(surgeryMapper.mapToSurgeryResponseDto(surgery)).thenReturn(dto);
+
+        SurgeryResponseDto result = surgeryService.getSurgery("Surg1");
+        assertEquals("Surg1", result.name());
+    }
+
+    @Test
+    void testGetAllSurgeries_Success() {
+        Surgery surgery = new Surgery(1L, "Clinic", new Address());
+        when(surgeryRepository.findAll()).thenReturn(List.of(surgery));
+        when(surgeryMapper.mapToSurgeryResponseDto(any())).thenReturn(new SurgeryResponseDto(1L, "Clinic", "Main", "City", "State", "12345"));
+
+        assertNotNull(surgeryService.getAllSurgeries());
+    }
+
+    @Test
+    void testGetAllSurgeries_Empty_ReturnsNull() {
+        when(surgeryRepository.findAll()).thenReturn(List.of());
+
+        assertNull(surgeryService.getAllSurgeries());
+    }
+}
+

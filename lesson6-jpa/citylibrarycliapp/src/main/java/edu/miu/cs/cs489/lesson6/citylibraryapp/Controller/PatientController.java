@@ -8,6 +8,7 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.PatientService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +21,7 @@ public class PatientController {
 
         // Get all patients
         @GetMapping(produces = "application/json")
+        @PreAuthorize("hasAuthority('ADMIN')")
         public ResponseEntity<PatientResponseList> getAllPatients() {
             PatientResponseList response = patientService.getPatientList();
             if (response == null) {
@@ -30,16 +32,16 @@ public class PatientController {
 
         // Get single patient by ID
         @GetMapping(value = "/{id}", produces = "application/json")
+        @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('PATIENT')")
         public ResponseEntity<PatientResponseDto> getPatientById(@PathVariable Long id) {
-            try {
+
                 PatientResponseDto patient = patientService.getPatient(id);
                 return ResponseEntity.ok(patient);
-            } catch (RuntimeException | PaitentNotFoundWithId e) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
+
         }
 
         // Add new patient
+        @PreAuthorize("hasAuthority('ADMIN')")
         @PostMapping(consumes = "application/json", produces = "application/json")
         public ResponseEntity<String> addPatient(@RequestBody PatientRequestDTO patientRequestDto) {
             patientService.addPatient(patientRequestDto);
@@ -49,21 +51,20 @@ public class PatientController {
 
         // Update patient
         @PutMapping(consumes = "application/json", produces = "application/json")
-        public ResponseEntity<String> updatePatient(@RequestBody PatientResponseDto patientResponseDto) throws PaitentNotFoundWithId {
+        @PreAuthorize("hasAuthority('PATIENT') or hasAuthority('ADMIN')")
+        public ResponseEntity<String> updatePatient(@RequestBody PatientResponseDto patientResponseDto) {
             patientService.updatePatient(patientResponseDto);
             return ResponseEntity.ok("Patient updated successfully");
         }
 
         // Delete patient
-        @DeleteMapping("/{id}")
-        public ResponseEntity<String> deletePatient(@PathVariable Long id) {
-            try {
-                patientService.deletePatient(id);
+        @DeleteMapping("/{userName}")
+        @PreAuthorize("hasAuthority('ADMIN')")
+        public ResponseEntity<String> deletePatient(@PathVariable String userName) throws PaitentNotFoundWithId {
+
+                patientService.deletePatient(userName);
                 return ResponseEntity.ok("Patient deleted successfully");
-            } catch (RuntimeException | PaitentNotFoundWithId e) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("Patient not found with id: " + id);
-            }
+
         }
 
 

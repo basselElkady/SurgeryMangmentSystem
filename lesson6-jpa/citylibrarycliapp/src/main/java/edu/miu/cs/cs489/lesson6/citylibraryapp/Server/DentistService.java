@@ -10,9 +10,9 @@ public interface DentistService {
 
     public UserResponseDto getDentist(Long id);
 
-    public void deleteDentist(Long id);
+    public void deleteDentist(String userName);
 
-    public void addDentist(UserRequestDto userRequestDto) throws DentistWithEmailAlreadyExist, DentistWithPhoneNumberAlreadyExist;
+    public void addDentist(UserRequestDto userRequestDto) ;
 
     public void updateDentist(UserResponseDto userResponseDto) throws AdminWithEmailAlreadyExist, DentistWithEmailAlreadyExist, DentistWithPhoneNumberAlreadyExist;
 

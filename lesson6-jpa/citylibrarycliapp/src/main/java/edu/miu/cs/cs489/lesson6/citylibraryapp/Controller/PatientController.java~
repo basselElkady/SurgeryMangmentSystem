@@ -1,0 +1,71 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp.Controller;
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.PatientRequestDTO;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseList;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.PatientExceptions.PaitentNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.PatientService;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/patients")
+@AllArgsConstructor
+public class PatientController {
+
+        private final PatientService patientService;
+
+
+        // Get all patients
+        @GetMapping(produces = "application/json")
+        @PreAuthorize("hasAuthority('ADMIN')")
+        public ResponseEntity<PatientResponseList> getAllPatients() {
+            PatientResponseList response = patientService.getPatientList();
+            if (response == null) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(response);
+        }
+
+        // Get single patient by ID
+        @GetMapping(value = "/{id}", produces = "application/json")
+        @PreAuthorize("hasAuthority('ADMIN')" +  "hasAuthority('PATIENT')")
+        public ResponseEntity<PatientResponseDto> getPatientById(@PathVariable Long id) {
+
+                PatientResponseDto patient = patientService.getPatient(id);
+                return ResponseEntity.ok(patient);
+
+        }
+
+        // Add new patient
+        @PreAuthorize("hasAuthority('ADMIN')")
+        @PostMapping(consumes = "application/json", produces = "application/json")
+        public ResponseEntity<String> addPatient(@RequestBody PatientRequestDTO patientRequestDto) {
+            patientService.addPatient(patientRequestDto);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Patient created successfully");
+        }
+
+        // Update patient
+        @PutMapping(consumes = "application/json", produces = "application/json")
+        @PreAuthorize("hasAuthority('PATIENT') or hasAuthority('ADMIN')")
+        public ResponseEntity<String> updatePatient(@RequestBody PatientResponseDto patientResponseDto) {
+            patientService.updatePatient(patientResponseDto);
+            return ResponseEntity.ok("Patient updated successfully");
+        }
+
+        // Delete patient
+        @DeleteMapping("/{userName}")
+        @PreAuthorize("hasAuthority('ADMIN')")
+        public ResponseEntity<String> deletePatient(@PathVariable String userName) throws PaitentNotFoundWithId {
+
+                patientService.deletePatient(userName);
+                return ResponseEntity.ok("Patient deleted successfully");
+
+        }
+
+
+}

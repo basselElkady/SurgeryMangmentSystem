@@ -1,0 +1,155 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp.Repository;
+
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.*;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.AppointmentRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.DentistRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.PatientRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.SurgeryRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+public class AppointmentRepositoryTest {
+
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private PatientRepository patientRepository;
+
+    @Autowired
+    private DentistRepository dentistRepository;
+
+    @Autowired
+    private SurgeryRepository surgeryRepository;
+
+    private Patient testPatient;
+    private Dentist testDentist;
+    private Surgery testSurgery;
+
+    @BeforeEach
+    void setUp() {
+        // Create and save test entities
+        testPatient = patientRepository.save(new Patient("username", "password", "John", "Doe",
+                "john@example.com", "123-456-7890", Role.PATIENT, new Address("123 Main St", "Anytown", "CA", "12345")));
+        testDentist = dentistRepository.save(new Dentist("username", "password",  "Jane", "Smith",
+                "jane@example.com", "987-654-3210", Role.DENTIST));
+        testSurgery = surgeryRepository.save(new Surgery(1L, "S300", new Address("123 Main St", "Anytown", "CA", "12345")));
+    }
+
+    @AfterEach
+    void tearDown() {
+        appointmentRepository.deleteAll();
+        patientRepository.deleteAll();
+        dentistRepository.deleteAll();
+        surgeryRepository.deleteAll();
+    }
+
+    @Test
+    void shouldSaveAndRetrieveAppointment() {
+        // Arrange
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalTime futureTime = LocalTime.now().plusHours(1);
+
+        Appointment appointment = new Appointment(
+                1L, tomorrow, futureTime, "Regular checkup",
+                testPatient, testDentist, testSurgery, new Bill(), AppointmentState.SCHEDULED
+        );
+
+        // Act
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+        Appointment foundAppointment = appointmentRepository.findById(savedAppointment.getId()).orElse(null);
+
+        // Assert
+        assertNotNull(foundAppointment);
+//        assertEquals("Regular checkup", foundAppointment.getDescription());
+//        assertEquals(testPatient.getId(), foundAppointment.getPatient().getId());
+    }
+
+    @Test
+    void shouldFindAppointmentsByDentistAndDateRange() {
+        // Arrange
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDate nextWeek = today.plusDays(7);
+        LocalTime time = LocalTime.of(10, 0);
+
+        // Create test appointments
+        appointmentRepository.save(new Appointment(
+                null, tomorrow, time, "Cleaning",
+                testPatient, testDentist, testSurgery, null, AppointmentState.SCHEDULED
+        ));
+        appointmentRepository.save(new Appointment(
+                null, nextWeek, time, "Filling",
+                testPatient, testDentist, testSurgery, null, AppointmentState.SCHEDULED
+        ));
+
+        // Act
+        List<Appointment> appointments = appointmentRepository.findByDentistAndDateBetween(
+                testDentist, today.minusDays(1), nextWeek.plusDays(1));
+
+        // Assert
+        assertEquals(2, appointments.size());
+    }
+
+    @Test
+    void shouldFindPagedAppointmentsByPatient() {
+        // Arrange
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalTime time = LocalTime.of(14, 0);
+
+        // Create 3 test appointments
+        for (int i = 1; i <= 3; i++) {
+            appointmentRepository.save(new Appointment(
+                    null, tomorrow.plusDays(i), time, "Appointment " + i,
+                    testPatient, testDentist, testSurgery, null, AppointmentState.SCHEDULED
+            ));
+        }
+
+        // Act - request first page with 2 items
+        Page<Appointment> page = appointmentRepository.findByPatient(
+                testPatient, PageRequest.of(0, 2));
+
+        // Assert
+        assertEquals(3, page.getTotalElements());
+        assertEquals(2, page.getNumberOfElements()); // Items on this page
+        assertEquals(2, page.getTotalPages());
+    }
+
+    @Test
+    void shouldNotFindAppointmentsForDifferentDentist() {
+        // Arrange
+        Dentist anotherDentist = dentistRepository.save(new Dentist(
+                null, "D201", "Mike", "Johnson",
+                "mike@example.com", "555-555-5555", Role.DENTIST));
+
+        LocalDate tomorrow = LocalDate.now().plusDays(1);
+        LocalTime time = LocalTime.of(9, 0);
+
+        appointmentRepository.save(new Appointment(
+                null, tomorrow, time, "Root canal",
+                testPatient, anotherDentist, testSurgery, null, AppointmentState.SCHEDULED
+        ));
+
+        // Act
+        List<Appointment> appointments = appointmentRepository.findByDentistAndDateBetween(
+                testDentist, tomorrow.minusDays(1), tomorrow.plusDays(1));
+
+        // Assert
+        assertTrue(appointments.isEmpty());
+    }
+}

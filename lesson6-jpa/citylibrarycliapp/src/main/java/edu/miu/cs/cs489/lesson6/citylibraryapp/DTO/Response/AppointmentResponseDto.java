@@ -15,6 +15,10 @@ public record AppointmentResponseDto(
     UserResponseDto dentist,
     Bill bill,
     AppointmentState state,
-    String surgeryName
+    String surgeryName,
+    String street,
+    String city,
+    String state2,
+    String zipCode
 ) {
 }

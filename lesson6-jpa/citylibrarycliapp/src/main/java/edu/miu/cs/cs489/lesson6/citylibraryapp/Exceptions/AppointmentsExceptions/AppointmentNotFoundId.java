@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class AppointmentNotFoundId extends Exception{
+public class AppointmentNotFoundId extends RuntimeException{
 
     public AppointmentNotFoundId(String message) {
         super(message);

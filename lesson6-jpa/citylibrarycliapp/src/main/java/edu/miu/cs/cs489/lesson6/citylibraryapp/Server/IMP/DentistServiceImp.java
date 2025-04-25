@@ -9,6 +9,7 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.Mapper.UserMapper;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.DentistService;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Dentist;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.DentistRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.UserRepository;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,12 @@ public class DentistServiceImp implements DentistService {
     private DentistRepository dentistRepository;
     private UserMapper userMapper;
 
+    private UserRepository userRepository;
     @Autowired
-    public DentistServiceImp(DentistRepository dentistRepository, UserMapper userMapper) {
+    public DentistServiceImp(DentistRepository dentistRepository, UserMapper userMapper, UserRepository userRepository) {
         this.dentistRepository = dentistRepository;
         this.userMapper = userMapper;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -37,14 +40,18 @@ public class DentistServiceImp implements DentistService {
 
     @Transactional
     @Override
-    public void deleteDentist(Long id) {
-        Dentist dentist = dentistRepository.findById(id).orElseThrow(() -> new RuntimeException("Dentist not found with id " + id));
+    public void deleteDentist(String userName) {
+        Dentist dentist = dentistRepository.findByUsername(userName);
+        if(dentist == null)
+            throw new RuntimeException("Dentist not found with username " + userName);
         dentistRepository.delete(dentist);
     }
 
     @Transactional
     @Override
-    public void addDentist(UserRequestDto userRequestDto) throws DentistWithEmailAlreadyExist, DentistWithPhoneNumberAlreadyExist {
+    public void addDentist(UserRequestDto userRequestDto) {
+        if(userRepository.existsByUsername(userRequestDto.username()))
+            throw new RuntimeException("Admin with username " + userRequestDto.username() + " already exists");
         if (dentistRepository.existsByPhoneNumber(userRequestDto.phoneNumber()))
             throw new DentistWithEmailAlreadyExist("Dentist with email " + userRequestDto.email() + " already exists");
         if(dentistRepository.existsByEmail(userRequestDto.email()))
@@ -55,8 +62,12 @@ public class DentistServiceImp implements DentistService {
 
     @Transactional
     @Override
-    public void updateDentist(UserResponseDto userResponseDto) throws DentistWithEmailAlreadyExist, DentistWithPhoneNumberAlreadyExist {
-        Dentist dentist = dentistRepository.findById(userResponseDto.id()).orElseThrow(() -> new RuntimeException("Dentist not found with id " + userResponseDto.id()));
+    public void updateDentist(UserResponseDto userResponseDto) {
+        Dentist dentist = dentistRepository.findByUsername(userResponseDto.oldUserName());
+        if(dentist == null)
+            throw new RuntimeException("Dentist not found with username " + userResponseDto.oldUserName());
+        if(userResponseDto.userName() != null)
+            dentist.setUsername(userResponseDto.userName());
         if (userResponseDto.firstName() != null)
             dentist.setFirstName(userResponseDto.firstName());
         if (userResponseDto.lastName() != null)

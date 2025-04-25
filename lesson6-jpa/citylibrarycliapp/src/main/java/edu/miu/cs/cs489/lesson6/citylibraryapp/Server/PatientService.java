@@ -14,10 +14,10 @@ public interface PatientService {
 
     void addPatient(PatientRequestDTO patientRequestDTO);
 
-    void deletePatient(Long id) throws PaitentNotFoundWithId;
-    PatientResponseDto getPatient(Long id) throws PaitentNotFoundWithId;
+    void deletePatient(String userName) ;
+    PatientResponseDto getPatient(Long id) ;
 
-    void updatePatient(PatientResponseDto patientResponseDto) throws PaitentNotFoundWithId;
+    void updatePatient(PatientResponseDto patientResponseDto) ;
 
     boolean validToAddAppointment(Appointment appointment);
 

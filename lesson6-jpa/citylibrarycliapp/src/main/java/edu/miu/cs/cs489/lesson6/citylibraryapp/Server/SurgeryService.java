@@ -9,13 +9,13 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.SurgeryExceptions.Surg
 
 public interface SurgeryService {
 
-    void addSurgery(SurgeryRequestDto surgeryRequestDto) throws SurgeryWithNameAlreadyExist;
+    void addSurgery(SurgeryRequestDto surgeryRequestDto) ;
 
-    void updateSurgery(SurgeryResponseDto surgeryResponseDto) throws SurgeryNotFoundWithId, SurgeryWithNameAlreadyExist;
+    void updateSurgery(SurgeryResponseDto surgeryResponseDto) ;
 
-    void deleteSurgery(String name) throws SurgeryNotFoundWithName;
+    void deleteSurgery(String name) ;
 
-    SurgeryResponseDto getSurgery(String name) throws SurgeryNotFoundWithName;
+    SurgeryResponseDto getSurgery(String name) ;
 
     SurgeryListResponse getAllSurgeries();
 

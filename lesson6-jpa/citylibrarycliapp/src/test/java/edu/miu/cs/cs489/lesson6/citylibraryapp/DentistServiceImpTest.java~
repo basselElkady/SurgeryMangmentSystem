@@ -1,0 +1,253 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp;
+
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.UserRequestDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.UserResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.DentistExceptions.DentistWithEmailAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.DentistExceptions.DentistWithPhoneNumberAlreadyExist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Mapper.UserMapper;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.IMP.DentistServiceImp;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Dentist;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.DentistRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class DentistServiceImpTest {
+
+    @Mock
+    private DentistRepository dentistRepository;
+
+    @Mock
+    private UserMapper userMapper;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @InjectMocks
+    private DentistServiceImp dentistService;
+
+    private Dentist mockDentist;
+    private UserRequestDto mockRequestDto;
+    private UserResponseDto mockResponseDto;
+
+    @BeforeEach
+    void setUp() {
+        mockDentist = new Dentist();
+        mockDentist.setId(1L);
+        mockDentist.setUsername("dentist1");
+        mockDentist.setFirstName("John");
+        mockDentist.setLastName("Doe");
+        mockDentist.setEmail("john.doe@example.com");
+        mockDentist.setPhoneNumber("1234567890");
+
+        mockRequestDto = new UserRequestDto(
+                "dentist1",
+                "password",
+                "John",
+                "Doe",
+                "john.doe@example.com",
+                "1234567890"
+        );
+
+        mockResponseDto = new UserResponseDto(
+                "dentist1",
+                "dentist1_updated",
+                "John",
+                "Doe",
+                "john.doe@example.com",
+                "1234567890"
+        );
+    }
+
+    // Get Dentist Tests
+    @Test
+    void getDentist_ShouldReturnDentistDto_WhenDentistExists() {
+        // Arrange
+        when(dentistRepository.findById(1L)).thenReturn(Optional.of(mockDentist));
+        when(userMapper.toDentistDto(mockDentist)).thenReturn(mockResponseDto);
+
+        // Act
+        UserResponseDto result = dentistService.getDentist(1L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(mockResponseDto, result);
+        verify(dentistRepository, times(1)).findById(1L);
+        verify(userMapper, times(1)).toDentistDto(mockDentist);
+    }
+
+    @Test
+    void getDentist_ShouldThrowRuntimeException_WhenDentistNotFound() {
+        // Arrange
+        when(dentistRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            dentistService.getDentist(1L);
+        });
+        verify(userMapper, never()).toDentistDto(any());
+    }
+
+    // Delete Dentist Tests
+    @Test
+    void deleteDentist_ShouldDeleteDentist_WhenDentistExists() {
+        // Arrange
+        when(dentistRepository.findByUsername("dentist1")).thenReturn(mockDentist);
+
+        // Act
+        dentistService.deleteDentist("dentist1");
+
+        // Assert
+        verify(dentistRepository, times(1)).delete(mockDentist);
+    }
+
+    @Test
+    void deleteDentist_ShouldThrowRuntimeException_WhenDentistNotFound() {
+        // Arrange
+        when(dentistRepository.findByUsername("unknown")).thenReturn(null);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            dentistService.deleteDentist("unknown");
+        });
+        verify(dentistRepository, never()).delete(any());
+    }
+
+    // Add Dentist Tests
+    @Test
+    void addDentist_ShouldSaveDentist_WhenNoConflictsExist() {
+        // Arrange
+        when(userRepository.existsByUsername("dentist1")).thenReturn(false);
+        when(dentistRepository.existsByEmail("john.doe@example.com")).thenReturn(false);
+        when(dentistRepository.existsByPhoneNumber("1234567890")).thenReturn(false);
+        when(userMapper.toDentist(mockRequestDto)).thenReturn(mockDentist);
+        when(dentistRepository.save(mockDentist)).thenReturn(mockDentist);
+
+        // Act
+        dentistService.addDentist(mockRequestDto);
+
+        // Assert
+        verify(dentistRepository, times(1)).save(mockDentist);
+    }
+
+    @Test
+    void addDentist_ShouldThrowException_WhenUsernameExists() {
+        // Arrange
+        when(userRepository.existsByUsername("dentist1")).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            dentistService.addDentist(mockRequestDto);
+        });
+        verify(dentistRepository, never()).save(any());
+    }
+
+   
+    // Update Dentist Tests
+    @Test
+    void updateDentist_ShouldUpdateDentist_WhenValidDataProvided() {
+        // Arrange
+        Dentist existingDentist = new Dentist();
+        existingDentist.setUsername("dentist1");
+
+        when(dentistRepository.findByUsername("dentist1")).thenReturn(existingDentist);
+        when(dentistRepository.existsByEmail("new.email@example.com")).thenReturn(false);
+        when(dentistRepository.existsByPhoneNumber("9876543210")).thenReturn(false);
+
+        UserResponseDto updateDto = new UserResponseDto(
+                "dentist1",
+                "dentist1_updated",
+                "John",
+                "Doe",
+                "new.email@example.com",
+                "9876543210"
+        );
+
+        // Act
+        dentistService.updateDentist(updateDto);
+
+        // Assert
+        verify(dentistRepository, times(1)).save(existingDentist);
+        assertEquals("dentist1_updated", existingDentist.getUsername());
+        assertEquals("new.email@example.com", existingDentist.getEmail());
+        assertEquals("9876543210", existingDentist.getPhoneNumber());
+    }
+
+    @Test
+    void updateDentist_ShouldThrowRuntimeException_WhenDentistNotFound() {
+        // Arrange
+        when(dentistRepository.findByUsername("unknown")).thenReturn(null);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            dentistService.updateDentist(new UserResponseDto(
+                    "unknown",
+                    "updated",
+                    "John",
+                    "Doe",
+                    "email@example.com",
+                    "1234567890"
+            ));
+        });
+        verify(dentistRepository, never()).save(any());
+    }
+
+    @Test
+    void updateDentist_ShouldThrowDentistWithEmailAlreadyExist_WhenEmailExists() {
+        // Arrange
+        Dentist existingDentist = new Dentist();
+        existingDentist.setUsername("dentist1");
+
+        when(dentistRepository.findByUsername("dentist1")).thenReturn(existingDentist);
+        when(dentistRepository.existsByEmail("existing.email@example.com")).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(DentistWithEmailAlreadyExist.class, () -> {
+            dentistService.updateDentist(new UserResponseDto(
+                    "dentist1",
+                    "dentist1",
+                    "John",
+                    "Doe",
+                    "existing.email@example.com",
+                    "1234567890"
+            ));
+        });
+        verify(dentistRepository, never()).save(any());
+    }
+
+    @Test
+    void updateDentist_ShouldThrowDentistWithPhoneNumberAlreadyExist_WhenPhoneNumberExists() {
+        // Arrange
+        Dentist existingDentist = new Dentist();
+        existingDentist.setUsername("dentist1");
+
+        when(dentistRepository.findByUsername("dentist1")).thenReturn(existingDentist);
+        when(dentistRepository.existsByEmail("new.email@example.com")).thenReturn(false);
+        when(dentistRepository.existsByPhoneNumber("existing.phone")).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(DentistWithPhoneNumberAlreadyExist.class, () -> {
+            dentistService.updateDentist(new UserResponseDto(
+                    "dentist1",
+                    "dentist1",
+                    "John",
+                    "Doe",
+                    "new.email@example.com",
+                    "existing.phone"
+            ));
+        });
+        verify(dentistRepository, never()).save(any());
+    }
+}

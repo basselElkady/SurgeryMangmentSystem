@@ -24,6 +24,13 @@ public class Address {
     @JsonIgnore
     private Patient patient;
 
+    public Address( String old, String oldCity, String oldState, String number) {
+        this.street = old;
+        this.city = oldCity;
+        this.state = oldState;
+        this.zipCode = number;
+    }
+
 
     @Override
     public String toString() {

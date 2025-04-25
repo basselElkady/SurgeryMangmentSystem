@@ -7,7 +7,7 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AdminExceptions.AdminW
 
 public interface AdminService {
 
-    void addAdmin(UserRequestDto adminRequestDto) throws AdminWithEmailAlreadyExist, AdminWithPhoneNumberAlreadyExist;
+    void addAdmin(UserRequestDto adminRequestDto);
 
     void deleteAdmin(Long id);
 

@@ -11,6 +11,7 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.SurgeryService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,30 +23,35 @@ public class SurgeryController {
     private SurgeryMapper surgeryMapper;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Void> addSurgery(@RequestBody @NotBlank SurgeryRequestDto surgeryRequestDto) throws SurgeryWithNameAlreadyExist {
         surgeryService.addSurgery(surgeryRequestDto);
         return ResponseEntity.ok().build();
     }
 
     @PutMapping
-    public ResponseEntity<Void> updateSurgery(@RequestBody @NotBlank SurgeryResponseDto surgeryResponseDto) throws SurgeryWithNameAlreadyExist, SurgeryNotFoundWithId {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> updateSurgery(@RequestBody @NotBlank SurgeryResponseDto surgeryResponseDto) {
         surgeryService.updateSurgery(surgeryResponseDto);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteSurgery(@RequestParam String name) throws SurgeryNotFoundWithName {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteSurgery(@RequestParam String name) {
         surgeryService.deleteSurgery(name);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
-    public ResponseEntity<SurgeryResponseDto> getSurgery(@RequestParam String name) throws SurgeryNotFoundWithName {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<SurgeryResponseDto> getSurgery(@RequestParam String name) {
         SurgeryResponseDto surgeryResponseDto = surgeryService.getSurgery(name);
         return ResponseEntity.ok(surgeryResponseDto);
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<SurgeryListResponse> getAllSurgeries() {
         SurgeryListResponse surgeryListResponse = surgeryService.getAllSurgeries();
         return ResponseEntity.ok(surgeryListResponse);

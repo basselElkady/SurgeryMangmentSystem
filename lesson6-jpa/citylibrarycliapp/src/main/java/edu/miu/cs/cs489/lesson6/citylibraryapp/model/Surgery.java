@@ -16,6 +16,7 @@ public class Surgery {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false, unique = true)
     private String name;
     @OneToOne(cascade = CascadeType.ALL)
     private Address address;
@@ -23,4 +24,9 @@ public class Surgery {
     private List<Appointment> appointments;
 
 
+    public Surgery(long l, String oldName, Address address) {
+        this.id = l;
+        this.name = oldName;
+        this.address = address;
+    }
 }

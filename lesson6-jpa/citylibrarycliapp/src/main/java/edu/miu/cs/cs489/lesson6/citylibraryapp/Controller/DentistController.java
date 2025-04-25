@@ -8,6 +8,7 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.DentistExceptions.Dent
 import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.DentistService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,25 +19,29 @@ public class DentistController {
     private DentistService dentistService;
 
     @PostMapping
-    public ResponseEntity<Void> addDentist(@RequestBody UserRequestDto userRequestDto) throws DentistWithPhoneNumberAlreadyExist, DentistWithEmailAlreadyExist {
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> addDentist(@RequestBody UserRequestDto userRequestDto) {
         dentistService.addDentist(userRequestDto);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteDentist(@RequestParam Long id) {
-        dentistService.deleteDentist(id);
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteDentist(@RequestParam String userName) {
+        dentistService.deleteDentist(userName);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('DENTIST')")
     public ResponseEntity<UserResponseDto> getDentist(@RequestParam Long id) {
         UserResponseDto dentist = dentistService.getDentist(id);
         return ResponseEntity.ok(dentist);
     }
 
     @PutMapping
-    public ResponseEntity<Void> updateDentist(@RequestBody UserResponseDto userResponseDto) throws DentistWithPhoneNumberAlreadyExist, DentistWithEmailAlreadyExist, AdminWithEmailAlreadyExist {
+    @PreAuthorize("hasAuthority('DENTIST') or hasAuthority('ADMIN')")
+    public ResponseEntity<Void> updateDentist(@RequestBody UserResponseDto userResponseDto)  {
         dentistService.updateDentist(userResponseDto);
         return ResponseEntity.ok().build();
     }

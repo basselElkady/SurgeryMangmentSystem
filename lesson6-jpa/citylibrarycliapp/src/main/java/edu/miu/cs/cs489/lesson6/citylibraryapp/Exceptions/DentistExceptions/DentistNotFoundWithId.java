@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
-public class DentistNotFoundWithId extends Exception{
+public class DentistNotFoundWithId extends RuntimeException{
 
     public DentistNotFoundWithId(String message) {
         super(message);

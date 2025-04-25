@@ -50,6 +50,9 @@ public class PatentServiceImp implements PatientService {
     @Transactional
     @Override
     public void addPatient(PatientRequestDTO patientRequestDto) {
+        if(userRepository.existsByUsername(patientRequestDto.userName()))
+            throw new PatientWithEmailAlreadyExist("Patient with username " + patientRequestDto.userName() + " already exists");
+
         if(patientRepository.existsByEmail(patientRequestDto.email()))
             throw new PatientWithEmailAlreadyExist("Patient with email " + patientRequestDto.email() + " already exists"); // exception should be thrown already exists
 
@@ -62,17 +65,17 @@ public class PatentServiceImp implements PatientService {
 
     @Transactional
     @Override
-    public void deletePatient(Long id) throws PaitentNotFoundWithId {
-        Patient patient = patientRepository.findById(id).orElse(null);
+    public void deletePatient(String userName) {
+        Patient patient = patientRepository.findByUsername(userName);
         if(patient == null) {
-            throw new PaitentNotFoundWithId("Patient not found with id " + id);
+            throw new RuntimeException("Patient not found with username " + userName);
         }
         patientRepository.delete(patient);
     }
 
     @Transactional
     @Override
-    public PatientResponseDto getPatient(Long id) throws PaitentNotFoundWithId {
+    public PatientResponseDto getPatient(Long id) {
         Patient patient = patientRepository.findById(id).orElseThrow(() -> new PaitentNotFoundWithId("Patient not found with id " + id));
         return patentMapper.toPatientDto(patient);
     }
@@ -81,8 +84,11 @@ public class PatentServiceImp implements PatientService {
 
     @Transactional
     @Override
-    public void updatePatient(PatientResponseDto patientResponseDto) throws PaitentNotFoundWithId {
-        Patient patient = patientRepository.findById(patientResponseDto.id()).orElseThrow(() -> new PaitentNotFoundWithId("Patient not found with id " + patientResponseDto.id()));
+    public void updatePatient(PatientResponseDto patientResponseDto) {
+        Patient patient = patientRepository.findByUsername(patientResponseDto.username());
+        if(patient == null)
+            throw new RuntimeException("Patient not found with username " + patientResponseDto.username());
+
         if(patientResponseDto.firstName() != null)
             patient.setFirstName(patientResponseDto.firstName());
         if(patientResponseDto.lastName() != null)

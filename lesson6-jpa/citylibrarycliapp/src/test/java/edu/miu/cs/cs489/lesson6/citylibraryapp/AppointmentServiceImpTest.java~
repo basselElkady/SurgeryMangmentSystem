@@ -1,0 +1,335 @@
+package edu.miu.cs.cs489.lesson6.citylibraryapp;
+
+
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Request.AppointmentRequestDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.AppointmentListResponse;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.AppointmentResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.PatientResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.DTO.Response.UserResponseDto;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AppointmentsExceptions.AppointmentIsAlreadyDoneException;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.AppointmentsExceptions.AppointmentNotFoundId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.DentistExceptions.DentistNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.PatientExceptions.PaitentDidnotPaidTheLastBillException;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Exceptions.PatientExceptions.PaitentNotFoundWithId;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Mapper.AppointmentMapper;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.IMP.AppointmentServiceImp;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.model.*;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.AppointmentRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.DentistRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.repository.PatientRepository;
+import edu.miu.cs.cs489.lesson6.citylibraryapp.Server.PatientService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
+
+import java.time.*;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AppointmentServiceImpTest {
+
+    @Mock
+    private AppointmentRepository appointmentRepository;
+
+    @Mock
+    private AppointmentMapper appointmentMapper;
+
+    @Mock
+    private PatientService patientService;
+
+    @Mock
+    private DentistRepository dentistRepository;
+
+    @Mock
+    private PatientRepository patientRepository;
+
+    @InjectMocks
+    private AppointmentServiceImp appointmentService;
+
+    private Appointment mockAppointment;
+    private AppointmentRequestDto mockRequestDto;
+    private AppointmentResponseDto mockResponseDto;
+    private Patient mockPatient;
+    private Dentist mockDentist;
+    private Bill mockBill;
+
+    @BeforeEach
+    void setUp() {
+        mockPatient = new Patient();
+        mockPatient.setId(1L);
+        mockPatient.setUsername("patient1");
+
+        mockDentist = new Dentist();
+        mockDentist.setId(1L);
+        mockDentist.setUsername("dentist1");
+
+        mockBill = new Bill();
+        mockBill.setId(1L);
+        mockBill.setAmount(100.0);
+        mockBill.setStatus(BillStatus.PENDING);
+
+        mockAppointment = new Appointment();
+        mockAppointment.setId(1L);
+        mockAppointment.setDate(LocalDate.now().plusDays(1));
+        mockAppointment.setTime(LocalTime.of(10, 0));
+        mockAppointment.setDescription("Regular checkup");
+        mockAppointment.setPatient(mockPatient);
+        mockAppointment.setDentist(mockDentist);
+        mockAppointment.setBill(mockBill);
+        mockAppointment.setState(AppointmentState.SCHEDULED);
+       // mockAppointment.setSurgeryName("Main Surgery");
+
+        mockRequestDto = new AppointmentRequestDto(
+                LocalDate.now().plusDays(1),
+                LocalTime.of(10, 0),
+                "Regular checkup",
+                1L,
+                1L,
+                100.0,
+                "Main Surgery"
+        );
+
+        // Update the mockResponseDto initialization in the setUp() method:
+        mockResponseDto = new AppointmentResponseDto(
+                1L,
+                LocalDate.now().plusDays(1),
+                LocalTime.of(10, 0),
+                "Regular checkup",
+                new PatientResponseDto(
+                        "1L",
+                        "patient1",
+                        "John",
+                        "Doe",
+                        "john.doe@example.com",
+                        "1234567890",
+                        "city",
+                        "state",
+                        "zipCode"
+                ),
+                new UserResponseDto(
+                        "dentist1",
+                        "dentist1",
+                        "Jane",
+                        "Smith",
+                        "jane.smith@example.com",
+                        "9876543210"
+                ),
+                mockBill,
+                AppointmentState.SCHEDULED,
+                "Main Surgery",
+                "123 Main St",
+                "Chicago",
+                "IL",
+                "60007"
+        );
+
+    }
+
+    // Add Appointment Tests
+    @Test
+    void addAppointment_ShouldSaveAppointment_WhenValid() {
+        // Arrange
+        when(appointmentMapper.mapToAppointment(mockRequestDto)).thenReturn(mockAppointment);
+        when(patientService.validToAddAppointment(any())).thenReturn(true);
+        when(appointmentRepository.save(any())).thenReturn(mockAppointment);
+
+        // Act
+        appointmentService.addAppointment(mockRequestDto);
+
+        // Assert
+        verify(appointmentMapper, times(1)).mapToAppointment(mockRequestDto);
+        verify(appointmentRepository, times(1)).save(mockAppointment);
+        assertTrue(mockPatient.getAppointments().contains(mockAppointment));
+        assertEquals(mockAppointment, mockPatient.getLastAppointment());
+    }
+
+    @Test
+    void addAppointment_ShouldThrowException_WhenPatientHasUnpaidBill() {
+        // Arrange
+        when(appointmentMapper.mapToAppointment(mockRequestDto)).thenReturn(mockAppointment);
+        when(patientService.validToAddAppointment(any())).thenReturn(false);
+
+        // Act & Assert
+        assertThrows(PaitentDidnotPaidTheLastBillException.class, () -> {
+            appointmentService.addAppointment(mockRequestDto);
+        });
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    // Cancel Appointment Tests
+    @Test
+    void cancelAppointment_ShouldCancel_WhenValid() {
+        // Arrange
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act
+        appointmentService.cancelAppointment(1L, 1L);
+
+        // Assert
+        assertEquals(AppointmentState.CANCELLED, mockAppointment.getState());
+        assertEquals(BillStatus.CANCELLED, mockAppointment.getBill().getStatus());
+        verify(appointmentRepository, times(1)).save(mockAppointment);
+    }
+
+    @Test
+    void cancelAppointment_ShouldThrowException_WhenAppointmentNotFound() {
+        // Arrange
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(AppointmentNotFoundId.class, () -> {
+            appointmentService.cancelAppointment(1L, 1L);
+        });
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelAppointment_ShouldThrowException_WhenAlreadyDone() {
+        // Arrange
+        mockAppointment.setState(AppointmentState.DONE);
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act & Assert
+        assertThrows(AppointmentIsAlreadyDoneException.class, () -> {
+            appointmentService.cancelAppointment(1L, 1L);
+        });
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelAppointment_ShouldThrowException_WhenPatientIdMismatch() {
+        // Arrange
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act & Assert
+        assertThrows(PaitentNotFoundWithId.class, () -> {
+            appointmentService.cancelAppointment(1L, 2L); // Different patient ID
+        });
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    // Pay for Appointment Tests
+    @Test
+    void payForAppointment_ShouldUpdateBillStatus_WhenValid() {
+        // Arrange
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act
+        appointmentService.payForAppointment(1L, 1L);
+
+        // Assert
+        assertEquals(BillStatus.PAID, mockAppointment.getBill().getStatus());
+        verify(appointmentRepository, times(1)).save(mockAppointment);
+    }
+
+    @Test
+    void payForAppointment_ShouldThrowException_WhenAppointmentCancelled() {
+        // Arrange
+        mockAppointment.setState(AppointmentState.CANCELLED);
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            appointmentService.payForAppointment(1L, 1L);
+        });
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    // Attend Appointment Tests
+    @Test
+    void attendAppointment_ShouldMarkAsDone_WhenValid() {
+        // Arrange
+        mockAppointment.setDate(LocalDate.now());
+        mockAppointment.setTime(LocalTime.now().minusHours(1)); // Appointment time passed
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act
+        appointmentService.attendAppointment(1L, 1L, 1L);
+
+        // Assert
+        assertEquals(AppointmentState.DONE, mockAppointment.getState());
+        verify(appointmentRepository, times(1)).save(mockAppointment);
+    }
+
+    @Test
+    void attendAppointment_ShouldThrowException_WhenDentistIdMismatch() {
+        // Arrange
+        when(appointmentRepository.findById(1L)).thenReturn(Optional.of(mockAppointment));
+
+        // Act & Assert
+        assertThrows(DentistNotFoundWithId.class, () -> {
+            appointmentService.attendAppointment(1L, 2L, 1L); // Different dentist ID
+        });
+        verify(appointmentRepository, never()).save(any());
+    }
+
+    // Get Appointments for Dentist Tests
+
+
+    @Test
+    void getAppointmentsForaSpecificDentist_ShouldThrowException_WhenDentistNotFound() {
+        // Arrange
+        when(dentistRepository.findByUsername("unknown")).thenReturn(null);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            appointmentService.getAppointmentsForaSpecificDentist("unknown");
+        });
+    }
+
+    // Get Appointments for Patient Tests
+    @Test
+    void getAppointmentsForaSpecificPatient_ShouldReturnPaginatedAppointments() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("date").descending());
+        Page<Appointment> page = new PageImpl<>(List.of(mockAppointment));
+
+        when(patientRepository.findByUsername("patient1")).thenReturn(mockPatient);
+        when(appointmentRepository.findByPatient(mockPatient, pageable)).thenReturn(page);
+        when(appointmentMapper.mapToAppointmentResponseDto(mockAppointment)).thenReturn(mockResponseDto);
+
+        // Act
+        AppointmentListResponse response = appointmentService.getAppointmentsForaSpecificPatient("patient1", 0, 10);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(1, response.appointmentList().size());
+        assertEquals(mockResponseDto, response.appointmentList().get(0));
+    }
+
+    @Test
+    void getAppointmentsForaSpecificPatient_ShouldThrowException_WhenInvalidPage() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            appointmentService.getAppointmentsForaSpecificPatient("patient1", -1, 10);
+        });
+    }
+
+    @Test
+    void getAppointmentsForaSpecificPatient_ShouldThrowException_WhenInvalidSize() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            appointmentService.getAppointmentsForaSpecificPatient("patient1", 0, 0);
+        });
+    }
+
+    @Test
+    void getAppointmentsForaSpecificPatient_ShouldThrowException_WhenPatientNotFound() {
+        // Arrange
+        when(patientRepository.findByUsername("unknown")).thenReturn(null);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            appointmentService.getAppointmentsForaSpecificPatient("unknown", 0, 10);
+        });
+    }
+}

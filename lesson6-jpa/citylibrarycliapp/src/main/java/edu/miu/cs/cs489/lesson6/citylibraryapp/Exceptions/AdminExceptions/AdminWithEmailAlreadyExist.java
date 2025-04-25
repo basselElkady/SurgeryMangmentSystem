@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.CONFLICT)
-public class AdminWithEmailAlreadyExist extends Exception{
+public class AdminWithEmailAlreadyExist extends RuntimeException{
 
     public AdminWithEmailAlreadyExist(String message) {
         super(message);

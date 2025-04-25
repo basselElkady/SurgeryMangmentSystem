@@ -10,5 +10,7 @@ import java.util.List;
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
     boolean existsByEmail(String email);
+
+    Patient findByUsername(String userName);
     boolean existsByPhoneNumber(String phoneNumber);
 }

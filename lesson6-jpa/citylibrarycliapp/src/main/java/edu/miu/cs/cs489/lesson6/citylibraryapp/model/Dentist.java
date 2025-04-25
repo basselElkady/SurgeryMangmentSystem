@@ -23,4 +23,9 @@ public class Dentist extends User {
         super(firstName, lastName, email, phoneNumber,role);
 
     }
+
+    public Dentist(String username, String password, String s, String s1, String email, String s2, Role role) {
+
+        super(username, password, s, s1, email, s2, role);
+    }
 }

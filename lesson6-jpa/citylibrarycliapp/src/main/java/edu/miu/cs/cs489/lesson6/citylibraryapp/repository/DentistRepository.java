@@ -9,6 +9,8 @@ public interface DentistRepository extends JpaRepository<Dentist,Long> {
 
     boolean existsByPhoneNumber(String phoneNumber);
 
+    Dentist findByUsername(String userName);
+
     boolean existsByEmail(String email);
 
 

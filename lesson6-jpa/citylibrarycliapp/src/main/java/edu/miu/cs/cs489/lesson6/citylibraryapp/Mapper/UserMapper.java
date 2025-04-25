@@ -7,15 +7,24 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Admin;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Dentist;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Role;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@AllArgsConstructor
 public class UserMapper {
+
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public UserMapper(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public UserResponseDto toDentistDto(Dentist dentist) {
         return new UserResponseDto(
-                dentist.getId(),
+                dentist.getUsername(),
+                dentist.getUsername(),
                 dentist.getFirstName(),
                 dentist.getLastName(),
                 dentist.getEmail(),
@@ -26,7 +35,8 @@ public class UserMapper {
 
     public UserResponseDto toAdminDto(Admin dentist) {
         return new UserResponseDto(
-                dentist.getId(),
+                dentist.getUsername(),
+                dentist.getUsername(),
                 dentist.getFirstName(),
                 dentist.getLastName(),
                 dentist.getEmail(),
@@ -40,6 +50,8 @@ public class UserMapper {
     public Dentist toDentist(UserRequestDto dentistResponseDto) {
 
         return new Dentist(
+                dentistResponseDto.username(),
+                passwordEncoder.encode(dentistResponseDto.password()),
                 dentistResponseDto.firstName(),
                 dentistResponseDto.lastName(),
                 dentistResponseDto.email(),
@@ -52,6 +64,8 @@ public class UserMapper {
     public Admin toUser(UserRequestDto dentistResponseDto) {
 
         return new Admin(
+                dentistResponseDto.username(),
+                passwordEncoder.encode(dentistResponseDto.password()),
                 dentistResponseDto.firstName(),
                 dentistResponseDto.lastName(),
                 dentistResponseDto.email(),

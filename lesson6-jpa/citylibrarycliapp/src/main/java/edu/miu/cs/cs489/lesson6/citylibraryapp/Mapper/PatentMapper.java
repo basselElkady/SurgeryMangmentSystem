@@ -6,21 +6,28 @@ import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Address;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Patient;
 import edu.miu.cs.cs489.lesson6.citylibraryapp.model.Role;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 
-@AllArgsConstructor
 //@Configuration
 @Component
 public class PatentMapper {
 
 
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    public PatentMapper(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
 
     public PatientResponseDto toPatientDto(Patient patient) {
         return new PatientResponseDto(
-                patient.getId(),
+                patient.getUsername(),
                 patient.getFirstName(),
                 patient.getLastName(),
                 patient.getEmail(),
@@ -41,6 +48,8 @@ public class PatentMapper {
         address.setZipCode(patientResponseDto.zipCode());
 
         return new Patient(
+                patientResponseDto.userName(),
+                passwordEncoder.encode(patientResponseDto.password()),
                 patientResponseDto.firstName(),
                 patientResponseDto.lastName(),
                 patientResponseDto.email(),

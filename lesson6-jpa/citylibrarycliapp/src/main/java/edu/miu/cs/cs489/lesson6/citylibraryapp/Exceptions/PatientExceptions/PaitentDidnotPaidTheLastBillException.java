@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value = HttpStatus.FORBIDDEN)
-public class PaitentDidnotPaidTheLastBillException extends Exception{
+public class PaitentDidnotPaidTheLastBillException extends RuntimeException{
 
     public PaitentDidnotPaidTheLastBillException(String message) {
         super(message);

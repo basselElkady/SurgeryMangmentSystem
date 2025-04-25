@@ -87,7 +87,12 @@ public class AppointmentMapper {
                 dentistMapper.toDentistDto(appointment.getDentist()),
                 appointment.getBill(),
                 appointment.getState(),
-                appointment.getSurgery().getName()
+                appointment.getSurgery().getName(),
+                appointment.getSurgery().getAddress().getStreet(),
+                appointment.getSurgery().getAddress().getCity(),
+                appointment.getSurgery().getAddress().getState(),
+                appointment.getSurgery().getAddress().getZipCode()
+
         );
     }
 
